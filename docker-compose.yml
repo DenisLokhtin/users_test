@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:8.0.30
+    restart: always
+    env_file:
+      .env
+    ports:
+      - "3306:3306"
+    expose:
+      - 3306
+    volumes:
+      - my-db:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d
+
+  api:
+    build: .
+    depends_on:
+      - db
+    env_file:
+      .env
+    image: kawaiimelnik/users_test:api
+    restart: always
+    ports:
+      - "8088:8088"
+volumes:
+  my-db:
