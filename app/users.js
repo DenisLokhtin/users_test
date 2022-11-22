@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const mysqlDb = require('../mysqlDb');
-const dayjs = require('dayjs');
 
 //all users
 router.get('/', async (req, res) => {
@@ -10,7 +9,6 @@ router.get('/', async (req, res) => {
             `SELECT *
              FROM Users`
         );
-        if (!UsersAll.length) return res.send('users do not exist')
         res.send(UsersAll);
     } catch (e) {
         console.log(e);
@@ -91,7 +89,7 @@ router.get('/:id', async (req, res) => {
         const [User] = await mysqlDb.getConnection().query(
             `Select *
              from Users
-             where id = ${req.params.id}`);
+             where id = ?`, [req.params.id]);
 
         if (!User.length) return res.send('user do not exist');
 
@@ -108,15 +106,15 @@ router.get('/:id/friends', async (req, res) => {
         const [User] = await mysqlDb.getConnection().query(
             `Select *
              from Users
-             where id = ${req.params.id}`);
+             where id = ?`, [req.params.id]);
 
         if (!User.length) return res.send('user do not exist');
 
         const [SubscriptionsAll] = await mysqlDb.getConnection().query(
             `Select *
              from Users
-             where id in (select FriendId from Friends where userId = ${req.params.id})
-             ORDER BY id ${req.query.order_type}`);
+             where id in (select FriendId from Friends where userId = ?)
+             ORDER BY id ${req.query.order_type}`, [req.params.id]);
 
         res.send({user: User[0], subscriptions: SubscriptionsAll});
     } catch (e) {
