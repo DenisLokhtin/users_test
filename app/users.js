@@ -25,26 +25,20 @@ router.get('/', async (req, res) => {
 //top 5 following users
 router.get('/max-following', async (req, res) => {
     try {
-        const [UsersAll] = await mysqlDb.getConnection().query(
+        const [MaxFollowers] = await mysqlDb.getConnection().query(
             `select Friends.userId,
-                     Friends.count(*),
-                     Users.firstName,
-                     Users.gender
-              from (
-                       select friendId, count(*)
-                       from Friends
-                       group by friendId
-                       order by count(*) desc limit 5
-                   ) as Friends
-                       left join Users on Users.id = Friends.userId`
-            // `SELECT friendId, userId, count(*) as subscribers, firstName, gender
-            //  FROM Friends
-            //  Left join Users
-            //  On Friends.userId = Users.id
-            //  Group by friendId
-            //  Order by count(*) desc limit 5`
+                    Friends.subscribers,
+                    Users.firstName,
+                    Users.gender
+             from (
+                      select userId, count(*) as subscribers
+                      from Friends
+                      group by userId
+                      order by count(*) desc limit 5
+                  ) as Friends
+                      left join Users on Users.id = Friends.userId`
         );
-        res.send(UsersAll);
+        res.send(MaxFollowers);
     } catch (e) {
         console.log(e);
         res.status(500).send('Something went wrong');
@@ -54,11 +48,12 @@ router.get('/max-following', async (req, res) => {
 //list of users with 0 following
 router.get('/not-following', async (req, res) => {
     try {
-        const [UsersAll] = await mysqlDb.getConnection().query(
+        const [NotFollowers] = await mysqlDb.getConnection().query(
             `SELECT *
-             FROM Users`
+             FROM Users
+             WHERE id NOT IN (Select Friends.friendId FROM Friends)`
         );
-        res.send(UsersAll);
+        res.send(NotFollowers);
     } catch (e) {
         console.log(e);
         res.status(500).send('Something went wrong');
