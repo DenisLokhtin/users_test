@@ -3,9 +3,9 @@
 **Running a project with docker-compose:**
 
 ```
-git clone https://github.com/DenisLokhtin/Books-test.git
+git clone https://github.com/DenisLokhtin/users_test.git
 
-cd Users_test/
+cd users_test/
 
 docker-compose-up
 ```
