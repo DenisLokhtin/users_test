@@ -7,7 +7,7 @@ git clone https://github.com/DenisLokhtin/users_test.git
 
 cd users_test/
 
-docker-compose-up
+docker-compose up
 ```
 
 - This will start building the application via docker-compose.
