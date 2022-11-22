@@ -10,11 +10,7 @@ router.get('/', async (req, res) => {
             `SELECT *
              FROM Users`
         );
-        const [FriendsAll] = await mysqlDb.getConnection().query(
-            `Select *
-             from Users
-             where id in (select FriendId from Friends where userId = ${req.params.id})`);
-
+        if (!UsersAll.length) return res.send('users do not exist')
         res.send(UsersAll);
     } catch (e) {
         console.log(e);
@@ -38,6 +34,7 @@ router.get('/max-following', async (req, res) => {
                   ) as Friends
                       left join Users on Users.id = Friends.userId`
         );
+        if (!MaxFollowers.length) return res.send('users do not exist')
         res.send(MaxFollowers);
     } catch (e) {
         console.log(e);
@@ -53,6 +50,7 @@ router.get('/not-following', async (req, res) => {
              FROM Users
              WHERE id NOT IN (Select Friends.friendId FROM Friends)`
         );
+        if (!NotFollowers.length) return res.send('users with 0 following do not exist');
         res.send(NotFollowers);
     } catch (e) {
         console.log(e);
@@ -87,7 +85,7 @@ router.post('/', async (req, res) => {
     }
 });
 
-// user with friends list
+// user
 router.get('/:id', async (req, res) => {
     try {
         const [User] = await mysqlDb.getConnection().query(
@@ -95,10 +93,30 @@ router.get('/:id', async (req, res) => {
              from Users
              where id = ${req.params.id}`);
 
+        if (!User.length) return res.send('user do not exist');
+
+        res.send(User[0]);
+    } catch (e) {
+        console.log(e);
+        res.status(500).send('Something went wrong');
+    }
+});
+
+// user with friends list
+router.get('/:id/friends', async (req, res) => {
+    try {
+        const [User] = await mysqlDb.getConnection().query(
+            `Select *
+             from Users
+             where id = ${req.params.id}`);
+
+        if (!User.length) return res.send('user do not exist');
+
         const [SubscriptionsAll] = await mysqlDb.getConnection().query(
             `Select *
              from Users
-             where id in (select FriendId from Friends where userId = ${req.params.id})`);
+             where id in (select FriendId from Friends where userId = ${req.params.id})
+             ORDER BY id ${req.query.order_type}`);
 
         res.send({user: User[0], subscriptions: SubscriptionsAll});
     } catch (e) {
@@ -109,12 +127,13 @@ router.get('/:id', async (req, res) => {
 
 //edit user
 router.put('/:id', async (req, res) => {
-    if (!req.body.firstName) {
+    if (!req.body.firstName && !req.body.gender) {
         return res.status(400).send('Data not valid');
     }
 
     const user = {
         firstName: req.body.firstName,
+        gender: req.body.gender,
     }
 
     await mysqlDb.getConnection().query(
